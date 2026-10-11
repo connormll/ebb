@@ -7,12 +7,25 @@ format, and this project obeys [Semantic Versioning](https://semver.org/spec/v2.
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-11
+
 ### Added
 
 - **The Decision view can reach back past the last rebuttals.** A From picker
   above the sheets sets the earliest speech each sheet shows: the 2NR by
   default, or the 1AR, the Block, or any speech back to the 1AC. The choice is
   kept across rounds.
+
+### Fixed
+
+- **The Decision view heads each cross-ex period once.** A period is one
+  merged header above its Question and Response columns, as in the grid,
+  instead of a label repeated in every column header.
+- **The RFD completion popup is never clipped.** It opens above the Decision
+  view's panels rather than inside them.
+- **Typing a speech's name in the palette goes to that speech.** Speeches and
+  commands are ranked as one list, so a named speech is no longer buried
+  under commands that happen to match.
 
 ## [1.4.0] - 2026-10-11
 
@@ -912,7 +925,8 @@ flow one round together without a server of ours in the middle.
 
 - Initial tagged release.
 
-[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/shreerammodi/ebb/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/shreerammodi/ebb/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/shreerammodi/ebb/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/shreerammodi/ebb/compare/v1.3.1...v1.3.2
