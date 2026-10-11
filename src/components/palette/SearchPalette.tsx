@@ -8,7 +8,7 @@ import { executeCommand } from "@/lib/commands/commands";
 import { getEvent, speechOrder } from "@/lib/format/events";
 import { keyHintFor } from "@/lib/keymap/displayChord";
 import { searchCells } from "@/lib/search/cellSearch";
-import { searchCommands, searchSpeechCommands } from "@/lib/search/commandSearch";
+import { searchPaletteCommands } from "@/lib/search/commandSearch";
 import { useFlowStore } from "@/lib/store/useFlowStore";
 
 /**
@@ -71,32 +71,33 @@ function SearchPaletteInner() {
 
     const allRows = useMemo<Row[]>(() => {
         if (isCommandMode) {
-            const q = query.slice(1);
-            const commands: Row[] = searchCommands(q)
+            const speeches = round
+                ? speechOrder(getEvent(round.event), round.firstSide ?? "aff")
+                : [];
+            return searchPaletteCommands(query.slice(1), speeches)
                 .filter(
                     (c) =>
+                        c.kind !== "command" ||
                         c.id !== "round.swapOrder" ||
                         (round != null && getEvent(round.event).variableOrder),
                 )
-                .map((c) => ({
-                    kind: "command",
-                    id: c.id,
-                    text: c.label,
-                    hint: keyHintFor(c.id),
-                    run: () => executeCommand(c.id),
-                }));
-            if (!round) return commands;
-            const speeches = searchSpeechCommands(
-                q,
-                speechOrder(getEvent(round.event), round.firstSide ?? "aff"),
-            ).map<Row>((s) => ({
-                kind: "command",
-                id: `speech:${s.speechId}`,
-                text: s.label,
-                hint: null,
-                run: () => switchSpeech(s.speechId),
-            }));
-            return [...commands, ...speeches];
+                .map<Row>((c) =>
+                    c.kind === "command"
+                        ? {
+                              kind: "command",
+                              id: c.id,
+                              text: c.label,
+                              hint: keyHintFor(c.id),
+                              run: () => executeCommand(c.id),
+                          }
+                        : {
+                              kind: "command",
+                              id: `speech:${c.speechId}`,
+                              text: c.label,
+                              hint: null,
+                              run: () => switchSpeech(c.speechId),
+                          },
+                );
         }
         if (!round) return [];
         return searchCells(round, query).map((hit) => ({

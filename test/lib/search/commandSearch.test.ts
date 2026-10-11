@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 
 import { COMMANDS } from "@/lib/commands/registry";
 import { getEvent, speechOrder } from "@/lib/format/events";
-import { searchCommands, searchSpeechCommands } from "@/lib/search/commandSearch";
+import {
+    searchCommands,
+    searchPaletteCommands,
+    searchSpeechCommands,
+} from "@/lib/search/commandSearch";
 
 const speeches = speechOrder(getEvent("policy"), "aff");
 const parli = speechOrder(getEvent("parli"), "aff");
@@ -96,5 +100,19 @@ describe("searchCommands", () => {
         expect(searchCommands("toggle kicked")[0].label).toBe(
             COMMANDS["format.toggleKicked"].label,
         );
+    });
+});
+
+describe("searchPaletteCommands", () => {
+    it("ranks a named speech above a command that reaches it only by keyword", () => {
+        const hits = searchPaletteCommands("2ar", speeches);
+        expect(hits[0]).toMatchObject({ kind: "speech", speechId: "2ar" });
+        expect(hits.some((h) => h.kind === "command" && h.id === "view.decision")).toBe(true);
+    });
+
+    it("lists commands before speeches for an empty query", () => {
+        const hits = searchPaletteCommands("", speeches);
+        expect(hits[0].kind).toBe("command");
+        expect(hits.at(-1)).toMatchObject({ kind: "speech", speechId: speeches.at(-1)!.id });
     });
 });

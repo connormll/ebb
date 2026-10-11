@@ -24,14 +24,14 @@ const ALL = Object.values(COMMANDS);
  * command whose label the query actually names.
  */
 export function searchCommands(query: string): CommandHit[] {
-    return rank(
-        ALL,
-        query,
-        (c) => c.label,
-        (c) => c.keywords ?? "",
-        () => 0,
-    ).map((c) => ({ id: c.id, label: c.label }));
+    return rank(ALL, query, commandPrimary, commandSecondary, () => 0).map((c) => ({
+        id: c.id,
+        label: c.label,
+    }));
 }
+
+const commandPrimary = (c: (typeof ALL)[number]) => c.label;
+const commandSecondary = (c: (typeof ALL)[number]) => c.keywords ?? "";
 
 export interface SpeechCommandHit {
     speechId: string;
@@ -59,8 +59,49 @@ export function searchSpeechCommands(
     return rank(
         speeches,
         query,
-        (s) => `${speechCommandLabel(s)} ${speechTerms(s)}`,
+        speechPrimary,
         () => "",
         () => 0,
-    ).map((s) => ({ speechId: s.id, label: speechCommandLabel(s) }));
+    ).map((s) => ({
+        speechId: s.id,
+        label: speechCommandLabel(s),
+    }));
+}
+
+const speechPrimary = (s: SpeechDef) => `${speechCommandLabel(s)} ${speechTerms(s)}`;
+
+export type PaletteCommandHit =
+    | ({ kind: "command" } & CommandHit)
+    | ({ kind: "speech" } & SpeechCommandHit);
+
+/**
+ * Commands and the round's speeches ranked as one list, so a speech the query
+ * names outranks a command it only reaches through keywords: "2ar" is the
+ * 2AR before it is a keyword of the decision view. An empty query lists the
+ * commands in registry order, then the speeches in speaking order.
+ */
+export function searchPaletteCommands(
+    query: string,
+    speeches: readonly SpeechDef[],
+): PaletteCommandHit[] {
+    type Entry = { hit: PaletteCommandHit; primary: string; secondary: string };
+    const entries: Entry[] = [
+        ...ALL.map((c) => ({
+            hit: { kind: "command" as const, id: c.id, label: c.label },
+            primary: commandPrimary(c),
+            secondary: commandSecondary(c),
+        })),
+        ...speeches.map((s) => ({
+            hit: { kind: "speech" as const, speechId: s.id, label: speechCommandLabel(s) },
+            primary: speechPrimary(s),
+            secondary: "",
+        })),
+    ];
+    return rank(
+        entries,
+        query,
+        (e) => e.primary,
+        (e) => e.secondary,
+        () => 0,
+    ).map((e) => e.hit);
 }
