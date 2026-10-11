@@ -7,6 +7,8 @@ format, and this project obeys [Semantic Versioning](https://semver.org/spec/v2.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-11
+
 ### Added
 
 - **Decision view.** A Flow / Decision switch in the round header, or
@@ -23,6 +25,8 @@ format, and this project obeys [Semantic Versioning](https://semver.org/spec/v2.
 - **The round header has no RFD button.** The Decision view is where the RFD
   is written now; the RFD drawer is still a scratchpad one Meta+J away, and the
   View menu and the palette still open it.
+- Dependencies are updated, including Next.js 16.3.8, which clears a critical
+  advisory, Tauri 2.11.6, and iroh 1.3.0.
 
 ### Fixed
 
@@ -901,7 +905,8 @@ flow one round together without a server of ours in the middle.
 
 - Initial tagged release.
 
-[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/shreerammodi/ebb/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/shreerammodi/ebb/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/shreerammodi/ebb/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/shreerammodi/ebb/compare/v1.3.0...v1.3.1
