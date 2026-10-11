@@ -42,6 +42,23 @@ describe("DecisionView", () => {
         expect(panel.textContent).not.toContain("1AC");
     });
 
+    it("heads each cross-ex period with one merged cell above its pair", () => {
+        const cx = round.sheets[0];
+        cx.data = [["who funds it", "the states"]];
+        useFlowStore.getState().loadRound(round);
+        renderView();
+        const panel = screen.getByTestId(`decision-panel-${cx.id}`);
+        const [periods, pair] = within(panel).getAllByRole("row");
+        const period = within(periods).getByRole("columnheader");
+        expect(period).toHaveTextContent("1AC CX");
+        expect(period).toHaveAttribute("colspan", "2");
+        expect(
+            within(pair)
+                .getAllByRole("columnheader")
+                .map((th) => th.textContent),
+        ).toEqual(["Question", "Response"]);
+    });
+
     it("hides and shows sheets by hand", async () => {
         renderView();
         const cx = round.sheets[0];

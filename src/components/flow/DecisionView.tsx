@@ -33,6 +33,17 @@ function titleInk(sheet: FlowSheet): string {
     return sheet.group === "neg" ? "text-neg" : "text-aff";
 }
 
+/** The cross-ex period tier: one merged header per run of columns sharing a period, as the grid draws it. */
+function periodSpans(columns: DecisionPanel["columns"]) {
+    const spans: { label: string; span: number; index: number }[] = [];
+    for (const { col, index } of columns) {
+        const last = spans.at(-1);
+        if (last && last.label === (col.group ?? "")) last.span++;
+        else spans.push({ label: col.group ?? "", span: 1, index });
+    }
+    return spans;
+}
+
 function Panel({ panel }: { panel: DecisionPanel }) {
     const setDecisionPanel = useFlowStore((s) => s.setDecisionPanel);
     const { sheet, columns, rows } = panel;
@@ -69,6 +80,20 @@ function Panel({ panel }: { panel: DecisionPanel }) {
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <table className="decision-flow font-flow w-full table-fixed border-collapse">
                     <thead className="bg-background sticky top-0">
+                        {sheet.kind === "cx" && (
+                            <tr>
+                                {periodSpans(columns).map(({ label, span, index }) => (
+                                    <th
+                                        key={index}
+                                        scope="colgroup"
+                                        colSpan={span}
+                                        className="border-border text-foreground truncate border-b border-l px-2 py-1.5 text-center text-[11px] font-bold first:border-l-0"
+                                    >
+                                        {label}
+                                    </th>
+                                ))}
+                            </tr>
+                        )}
                         <tr>
                             {columns.map(({ col, index }) => (
                                 <th
@@ -79,11 +104,6 @@ function Panel({ panel }: { panel: DecisionPanel }) {
                                         col.side === "aff" ? "text-aff" : "text-neg",
                                     )}
                                 >
-                                    {col.group && (
-                                        <div className="text-muted-foreground truncate font-semibold">
-                                            {col.group}
-                                        </div>
-                                    )}
                                     {col.short}
                                 </th>
                             ))}
