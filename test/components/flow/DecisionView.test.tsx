@@ -42,6 +42,15 @@ describe("DecisionView", () => {
         expect(panel.textContent).not.toContain("1AC");
     });
 
+    it("shows earlier speeches once the judge reaches back to them", () => {
+        useFlowStore.getState().setDecisionSpeeches(3);
+        renderView();
+        const panel = screen.getByTestId(`decision-panel-${round.sheets[1].id}`);
+        expect(within(panel).getByText("1AR")).toBeInTheDocument();
+        expect(screen.getByTestId("decision-from")).toHaveTextContent("1AR");
+        useFlowStore.getState().setDecisionSpeeches(2);
+    });
+
     it("heads each cross-ex period with one merged cell above its pair", () => {
         const cx = round.sheets[0];
         cx.data = [["who funds it", "the states"]];

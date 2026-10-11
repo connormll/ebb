@@ -37,6 +37,22 @@ describe("decisionColumns", () => {
         expect(shorts(round, 0)).toEqual(["Block", "PMR"]);
     });
 
+    it("reaches back to earlier speeches, clamped to the round and to the last rebuttals", () => {
+        const round = makeFlowRound({});
+        const aff = round.sheets.find((s) => s.kind !== "cx")!;
+        const at = (count: number) =>
+            decisionColumns(round, aff, count).map(({ col }) => col.short);
+        expect(at(3)).toEqual(["1AR", "2NR", "2AR"]);
+        expect(at(4)).toEqual(["Block", "1AR", "2NR", "2AR"]);
+        expect(at(99)).toEqual(["1AC", "1NC", "2AC", "Block", "1AR", "2NR", "2AR"]);
+        expect(at(0)).toEqual(["2NR", "2AR"]);
+
+        // A neg sheet has no 1AC column, so reaching back to it shows from the 1NC.
+        const neg = makeFlowSheet({ title: "T", group: "neg", order: 1 });
+        round.sheets.push(neg);
+        expect(decisionColumns(round, neg, 7).map(({ col }) => col.short)[0]).toBe("1NC");
+    });
+
     it("keeps every cross-ex period while the cross-ex sheet is empty", () => {
         const round = makeFlowRound({});
         const cx = round.sheets.findIndex((s) => s.kind === "cx");

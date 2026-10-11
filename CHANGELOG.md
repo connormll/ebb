@@ -7,6 +7,13 @@ format, and this project obeys [Semantic Versioning](https://semver.org/spec/v2.
 
 ## [Unreleased]
 
+### Added
+
+- **The Decision view can reach back past the last rebuttals.** A From picker
+  above the sheets sets the earliest speech each sheet shows: the 2NR by
+  default, or the 1AR, the Block, or any speech back to the 1AC. The choice is
+  kept across rounds.
+
 ## [1.4.0] - 2026-10-11
 
 ### Added

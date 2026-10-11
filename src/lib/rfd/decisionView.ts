@@ -1,12 +1,11 @@
 /**
  * What the decision view lays out beside the RFD: the cross-ex sheet whole,
- * and from every flow sheet only the last speech each side gives - the 2NR
- * and the 2AR in Policy - because those are the speeches a decision is
- * written on.
+ * and from every flow sheet only the round's last few speeches - by default
+ * the 2NR and the 2AR in Policy, because those are the speeches a decision is
+ * written on. A judge can reach back further, to the 1AR or earlier.
  */
 
-import { getEvent } from "@/lib/format/events";
-import { columnsForFlowSheet, type SpeechCol } from "@/lib/grid/flowColumns";
+import { columnsForFlowSheet, orderOf, type SpeechCol } from "@/lib/grid/flowColumns";
 import { sortedSheets, type FlowRound, type FlowSheet } from "@/lib/model/flow";
 
 /** One column a panel shows, with its index in the sheet's stored grid. */
@@ -27,29 +26,33 @@ export interface DecisionPanel {
     rows: DecisionRow[];
 }
 
+/** The fewest speeches the view shows: the last one each side gives. */
+export const DECISION_SPEECHES_DEFAULT = 2;
+
 /**
- * Ids of the last speech each side gives in the round's event: Policy's and
- * LD's 2NR and 2AR, Public Forum's two final focuses, Parliamentary's
- * Opposition Block and PMR.
+ * Ids of the round's last `count` speeches, clamped to between the last one
+ * each side gives and the whole round: with the default, Policy's and LD's
+ * 2NR and 2AR, Public Forum's two final focuses, Parliamentary's Opposition
+ * Block and PMR.
  */
-export function lastRebuttalIds(round: FlowRound): Set<string> {
-    const event = getEvent(round.event);
-    const ids = new Set<string>();
-    for (const side of [event.aff, event.neg]) {
-        const last = side.at(-1);
-        if (last) ids.add(last.id);
-    }
-    return ids;
+export function shownSpeechIds(round: FlowRound, count: number): Set<string> {
+    const order = orderOf(round);
+    const n = Math.min(order.length, Math.max(DECISION_SPEECHES_DEFAULT, Math.round(count)));
+    return new Set(order.slice(-n).map((s) => s.id));
 }
 
 /**
  * The columns a sheet's panel shows, in speaking order. A flow sheet shows
- * only its last rebuttals. The cross-ex sheet shows each period that holds
+ * only the round's last `count` speeches it holds. The cross-ex sheet shows each period that holds
  * any text, as its whole pair, so four periods of mostly empty columns do not
  * push every flow sheet off screen; with nothing written yet it shows them
  * all.
  */
-export function decisionColumns(round: FlowRound, sheet: FlowSheet): DecisionColumn[] {
+export function decisionColumns(
+    round: FlowRound,
+    sheet: FlowSheet,
+    count = DECISION_SPEECHES_DEFAULT,
+): DecisionColumn[] {
     const columns = columnsForFlowSheet(round, sheet).map((col, index) => ({ col, index }));
     if (sheet.kind === "cx") {
         const used = new Set<string | undefined>();
@@ -58,8 +61,8 @@ export function decisionColumns(round: FlowRound, sheet: FlowSheet): DecisionCol
         }
         return used.size === 0 ? columns : columns.filter(({ col }) => used.has(col.group));
     }
-    const last = lastRebuttalIds(round);
-    return columns.filter(({ col }) => last.has(col.id));
+    const shownIds = shownSpeechIds(round, count);
+    return columns.filter(({ col }) => shownIds.has(col.id));
 }
 
 /**
@@ -84,11 +87,12 @@ export function decisionRows(sheet: FlowSheet, columns: DecisionColumn[]): Decis
 export function decisionPanels(
     round: FlowRound,
     overrides: Readonly<Record<string, boolean>>,
+    count = DECISION_SPEECHES_DEFAULT,
 ): { shown: DecisionPanel[]; hidden: DecisionPanel[] } {
     const shown: DecisionPanel[] = [];
     const hidden: DecisionPanel[] = [];
     for (const sheet of sortedSheets(round)) {
-        const columns = decisionColumns(round, sheet);
+        const columns = decisionColumns(round, sheet, count);
         if (columns.length === 0) continue;
         const rows = decisionRows(sheet, columns);
         const visible = overrides[sheet.id] ?? rows.length > 0;

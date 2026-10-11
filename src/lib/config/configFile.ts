@@ -21,6 +21,7 @@ import {
     type AppConfig,
     bool,
     resolveColor,
+    resolveDecisionSpeeches,
     resolveSidebarWidth,
     resolveSpeakingWpm,
     resolveZoom,
@@ -41,6 +42,8 @@ export interface ConfigFileShape {
     sidebar_width: number;
     rfd_open: boolean;
     rfd_vim: boolean;
+    /** How many of the round's last speeches the decision view shows per sheet. */
+    decision_speeches: number;
     insert_paste: boolean;
     /** Typing on a cell adds to its text instead of replacing it. */
     append_edit: boolean;
@@ -143,6 +146,7 @@ export function configFromState(s: AppConfig): ConfigFileShape {
         sidebar_width: s.sidebarWidth,
         rfd_open: s.rfdOpen,
         rfd_vim: s.rfdVim,
+        decision_speeches: s.decisionSpeeches,
         insert_paste: s.insertPaste,
         append_edit: s.appendEdit,
         cx_enter_alternates: s.cxEnterAlternates,
@@ -206,6 +210,7 @@ export function toAppConfig(raw: unknown): AppConfig {
         sidebarWidth: resolveSidebarWidth(o.sidebar_width),
         rfdOpen: bool(o.rfd_open, false),
         rfdVim: bool(o.rfd_vim, false),
+        decisionSpeeches: resolveDecisionSpeeches(o.decision_speeches),
         insertPaste: bool(o.insert_paste, false),
         appendEdit: bool(o.append_edit, true),
         cxEnterAlternates: bool(o.cx_enter_alternates, false),

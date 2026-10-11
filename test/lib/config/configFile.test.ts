@@ -17,6 +17,7 @@ const sample: AppConfig = {
     sidebarWidth: 312,
     rfdOpen: false,
     rfdVim: true,
+    decisionSpeeches: 3,
     insertPaste: true,
     appendEdit: false,
     cxEnterAlternates: true,

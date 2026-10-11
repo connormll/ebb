@@ -28,6 +28,7 @@ import {
     type FlowSheet,
 } from "@/lib/model/flow";
 import type { Scouting, Side } from "@/lib/model/types";
+import { DECISION_SPEECHES_DEFAULT } from "@/lib/rfd/decisionView";
 import { resolveThemeMode, type ThemeMode } from "@/lib/theme/mode";
 import { loadUpdateConfig, saveUpdateConfig } from "@/lib/update/settings";
 import type { UpdateConfig } from "@/lib/update/types";
@@ -116,6 +117,11 @@ export interface FlowState {
      * round, and never reaches a `.ebb`.
      */
     decisionPanels: Record<string, boolean>;
+    /**
+     * How many of the round's last speeches the decision view lays out per
+     * sheet; 2 is the last rebuttal each side gives. Persisted like rfdVim.
+     */
+    decisionSpeeches: number;
     /** Paste pushes the target columns' existing cells down instead of overwriting them. */
     insertPaste: boolean;
     /**
@@ -288,6 +294,7 @@ export interface FlowActions {
     setWorkspaceView(view: WorkspaceView): void;
     /** Shows or hides one sheet's panel in the decision view. */
     setDecisionPanel(sheetId: string, shown: boolean): void;
+    setDecisionSpeeches(count: number): void;
     setRenamingSheet(id: string | null): void;
 }
 
@@ -327,6 +334,16 @@ export function resolveZoom(value: unknown): number {
     return typeof value === "number" && Number.isFinite(value) ? clampZoom(value) : 1;
 }
 
+/**
+ * A stored decision view depth as a whole count of at least the default. The
+ * upper bound depends on the round's event, so the view clamps that itself.
+ */
+export function resolveDecisionSpeeches(value: unknown): number {
+    return typeof value === "number" && Number.isFinite(value)
+        ? Math.max(DECISION_SPEECHES_DEFAULT, Math.round(value))
+        : DECISION_SPEECHES_DEFAULT;
+}
+
 export function resolveSpeakingWpm(value: unknown): number {
     return typeof value === "number" && Number.isFinite(value)
         ? Math.min(SPEAKING_WPM_MAX, Math.max(SPEAKING_WPM_MIN, Math.round(value)))
@@ -362,6 +379,7 @@ interface DisplaySettings {
     sidebarWidth: number;
     rfdOpen: boolean;
     rfdVim: boolean;
+    decisionSpeeches: number;
     insertPaste: boolean;
     appendEdit: boolean;
     cxEnterAlternates: boolean;
@@ -412,6 +430,7 @@ function loadDisplaySettings(): DisplaySettings {
         sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
         rfdOpen: false,
         rfdVim: false,
+        decisionSpeeches: DECISION_SPEECHES_DEFAULT,
         insertPaste: false,
         appendEdit: true,
         cxEnterAlternates: false,
@@ -445,6 +464,7 @@ function loadDisplaySettings(): DisplaySettings {
             sidebarWidth: resolveSidebarWidth(p.sidebarWidth),
             rfdOpen: bool(p.rfdOpen, false),
             rfdVim: bool(p.rfdVim, false),
+            decisionSpeeches: resolveDecisionSpeeches(p.decisionSpeeches),
             insertPaste: bool(p.insertPaste, false),
             appendEdit: bool(p.appendEdit, true),
             cxEnterAlternates: bool(p.cxEnterAlternates, false),
@@ -489,6 +509,7 @@ function displaySettingsOf(s: FlowState): DisplaySettings {
         sidebarWidth: s.sidebarWidth,
         rfdOpen: s.rfdOpen,
         rfdVim: s.rfdVim,
+        decisionSpeeches: s.decisionSpeeches,
         insertPaste: s.insertPaste,
         appendEdit: s.appendEdit,
         cxEnterAlternates: s.cxEnterAlternates,
@@ -594,6 +615,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     sidebarWidth: initialDisplaySettings.sidebarWidth,
     rfdOpen: initialDisplaySettings.rfdOpen,
     rfdVim: initialDisplaySettings.rfdVim,
+    decisionSpeeches: initialDisplaySettings.decisionSpeeches,
     workspaceView: "flow",
     decisionPanels: {},
     insertPaste: initialDisplaySettings.insertPaste,
@@ -1026,6 +1048,8 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     setDecisionPanel(sheetId, shown) {
         set({ decisionPanels: { ...get().decisionPanels, [sheetId]: shown } });
     },
+    setDecisionSpeeches: (count) =>
+        persistDisplay(set, get, { decisionSpeeches: resolveDecisionSpeeches(count) }),
     setRenamingSheet(id) {
         set({ renamingSheetId: id });
     },

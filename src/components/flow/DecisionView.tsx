@@ -2,7 +2,7 @@
 
 /**
  * DecisionView - the round laid out for writing a decision: the cross-ex
- * sheet and every flow sheet's last rebuttals side by side, beside the RFD.
+ * sheet and every flow sheet's last speeches side by side, beside the RFD.
  *
  * Read-only and rendered from FlowSheet data rather than through
  * Handsontable, so any number of sheets fit on screen at once; flowing
@@ -12,10 +12,22 @@
 import { Plus, X } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Tip } from "@/components/ui/tooltip";
 import { metaToClassName } from "@/lib/grid/codec";
-import type { FlowSheet } from "@/lib/model/flow";
-import { decisionPanels, type DecisionPanel } from "@/lib/rfd/decisionView";
+import { orderOf } from "@/lib/grid/flowColumns";
+import type { FlowRound, FlowSheet } from "@/lib/model/flow";
+import {
+    DECISION_SPEECHES_DEFAULT,
+    decisionPanels,
+    type DecisionPanel,
+} from "@/lib/rfd/decisionView";
 import { useFlowStore } from "@/lib/store/useFlowStore";
 import { cn } from "@/lib/utils";
 
@@ -141,18 +153,62 @@ function Panel({ panel }: { panel: DecisionPanel }) {
     );
 }
 
-function HiddenSheets({ hidden }: { hidden: DecisionPanel[] }) {
-    const setDecisionPanel = useFlowStore((s) => s.setDecisionPanel);
-    if (hidden.length === 0) return null;
+/**
+ * Picks the earliest speech each flow sheet shows, from the last rebuttals
+ * back to the round's first speech. Stored as a count of speeches from the
+ * end, so the choice carries across rounds and events.
+ */
+function SpeechRange({ round }: { round: FlowRound }) {
+    const count = useFlowStore((s) => s.decisionSpeeches);
+    const setDecisionSpeeches = useFlowStore((s) => s.setDecisionSpeeches);
+    const order = orderOf(round);
+    const items = order
+        .slice(0, order.length - DECISION_SPEECHES_DEFAULT + 1)
+        .map((speech, i) => ({ value: String(order.length - i), label: speech.short }))
+        .reverse();
+    const value = String(Math.min(count, order.length));
 
     return (
-        <div
-            data-testid="decision-hidden"
-            className="border-border flex flex-none flex-wrap items-center gap-1.5 border-b px-3 py-1.5"
-        >
+        <div className="flex flex-none items-center gap-1.5">
             <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                Hidden
+                From
             </span>
+            <Select
+                value={value}
+                items={items}
+                onValueChange={(v) => setDecisionSpeeches(Number(v))}
+            >
+                <SelectTrigger
+                    size="sm"
+                    aria-label="Earliest speech shown"
+                    data-testid="decision-from"
+                    className="h-6 px-2 text-[12px]"
+                >
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {items.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+    );
+}
+
+function Toolbar({ round, hidden }: { round: FlowRound; hidden: DecisionPanel[] }) {
+    const setDecisionPanel = useFlowStore((s) => s.setDecisionPanel);
+
+    return (
+        <div className="border-border flex flex-none flex-wrap items-center gap-1.5 border-b px-3 py-1.5">
+            <SpeechRange round={round} />
+            {hidden.length > 0 && (
+                <span className="text-muted-foreground ml-2 text-[11px] font-semibold tracking-wider uppercase">
+                    Hidden
+                </span>
+            )}
             {hidden.map(({ sheet }) => (
                 <button
                     key={sheet.id}
@@ -226,15 +282,16 @@ function RfdPanel() {
 export default function DecisionView() {
     const round = useFlowStore((s) => s.round);
     const overrides = useFlowStore((s) => s.decisionPanels);
+    const count = useFlowStore((s) => s.decisionSpeeches);
     const panels = useMemo(
-        () => (round ? decisionPanels(round, overrides) : { shown: [], hidden: [] }),
-        [round, overrides],
+        () => (round ? decisionPanels(round, overrides, count) : { shown: [], hidden: [] }),
+        [round, overrides, count],
     );
 
     return (
         <div data-testid="decision-view" className="no-print flex min-h-0 min-w-0 flex-1">
             <div className="flex min-w-0 flex-1 flex-col">
-                <HiddenSheets hidden={panels.hidden} />
+                {round && <Toolbar round={round} hidden={panels.hidden} />}
                 {panels.shown.length > 0 ? (
                     <div className="flex min-h-0 flex-1 overflow-x-auto">
                         {panels.shown.map((panel) => (
@@ -243,8 +300,8 @@ export default function DecisionView() {
                     </div>
                 ) : (
                     <p className="text-muted-foreground p-6 text-[13px]">
-                        No sheets shown. A sheet appears here once its last rebuttals or cross-ex
-                        have text in them
+                        No sheets shown. A sheet appears here once the speeches shown or its
+                        cross-ex have text in them
                         {panels.hidden.length > 0 &&
                             "; show one from the list above to lay it out now"}
                         .

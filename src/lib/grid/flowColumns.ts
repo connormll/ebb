@@ -91,7 +91,7 @@ export function crossExEnterMove(
  * named side is the other, which is the fallback a file that predates the
  * field gets.
  */
-function orderOf(round: FlowRound): SpeechDef[] {
+export function orderOf(round: FlowRound): SpeechDef[] {
     return speechOrder(getEvent(round.event), round.firstSide === "neg" ? "neg" : "aff");
 }
 
