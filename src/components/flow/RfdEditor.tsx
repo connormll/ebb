@@ -4,7 +4,7 @@ import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { Compartment, EditorState } from "@codemirror/state";
-import { drawSelection, EditorView, keymap } from "@codemirror/view";
+import { drawSelection, EditorView, keymap, tooltips } from "@codemirror/view";
 import { githubDark } from "@fsegurai/codemirror-theme-github-dark";
 import { githubLight } from "@fsegurai/codemirror-theme-github-light";
 import { vim } from "@replit/codemirror-vim";
@@ -170,6 +170,9 @@ export default function RfdEditor({ mode }: { mode: RfdMode }) {
                         icons: true,
                         optionClass: (c) => (c.type ? `cm-rfd-${c.type}` : ""),
                     }),
+                    // The editor sits in an overflow-hidden panel that would clip the
+                    // completion popup, so tooltips mount on <body> instead.
+                    tooltips({ parent: document.body }),
                     keymap.of([...defaultKeymap, ...historyKeymap, ...completionKeymap]),
                     rfdTheme,
                     EditorView.updateListener.of((u) => {
