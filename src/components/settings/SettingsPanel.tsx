@@ -548,18 +548,6 @@ export default function SettingsPanel() {
                                         </>
                                     }
                                 />
-                                <SettingRow
-                                    title="Vim keybindings"
-                                    description="Applies only to the RFD editor."
-                                    control={
-                                        <Switch
-                                            checked={rfdVim}
-                                            onCheckedChange={setRfdVim}
-                                            data-testid="rfd-vim-toggle"
-                                            aria-label="Vim keybindings"
-                                        />
-                                    }
-                                />
                             </div>
                         )}
                         {category === "editor" && (
@@ -597,6 +585,18 @@ export default function SettingsPanel() {
                                             onCheckedChange={setCxEnterAlternates}
                                             data-testid="cx-enter-toggle"
                                             aria-label="Cross-ex Enter"
+                                        />
+                                    }
+                                />
+                                <SettingRow
+                                    title="Vim keybindings"
+                                    description="Applies only to the RFD editor."
+                                    control={
+                                        <Switch
+                                            checked={rfdVim}
+                                            onCheckedChange={setRfdVim}
+                                            data-testid="rfd-vim-toggle"
+                                            aria-label="Vim keybindings"
                                         />
                                     }
                                 />

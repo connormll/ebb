@@ -316,10 +316,12 @@ describe("SettingsPanel", () => {
     });
 
     it("toggles the RFD vim setting", async () => {
+        const user = userEvent.setup();
         renderSettingsPanel();
+        await user.click(screen.getByTestId("settings-nav-editor"));
         const toggle = screen.getByTestId("rfd-vim-toggle");
         expect(toggle).not.toBeChecked();
-        await userEvent.click(toggle);
+        await user.click(toggle);
         expect(useFlowStore.getState().rfdVim).toBe(true);
         expect(toggle).toBeChecked();
     });
