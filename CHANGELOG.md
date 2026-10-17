@@ -7,6 +7,32 @@ format, and this project obeys [Semantic Versioning](https://semver.org/spec/v2.
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-10-17
+
+### Changed
+
+- **Vim keybindings is in Settings > Editor.** The toggle changes how the RFD
+  editor takes keys, so it sits with the other editing settings instead of
+  under Display. A debater who has it on keeps it on.
+
+### Fixed
+
+- **An idle window no longer keeps a core busy on Linux.** Reading
+  `config.toml` to answer a change in its folder counted as a change of its
+  own, so ebb read the file in a loop for as long as it ran. Only a real write
+  to the file is read now.
+- **Undo, redo, select all and delete to line start work in text fields on
+  Linux.** Where the Edit menu's shortcuts never reach the window, ebb performs
+  the edit itself instead of doing nothing.
+- **Updates download behind a shared network.** The update manifest points at
+  public download links, so a school or tournament network that has spent
+  GitHub's per-address limit no longer leaves the update panel empty.
+
+### Security
+
+- **The TLS library under shared editing is updated.** rustls 0.23.46 fixes
+  four advisories (RUSTSEC-2026-0346 to RUSTSEC-2026-0349).
+
 ## [1.4.1] - 2026-10-11
 
 ### Added
@@ -925,7 +951,8 @@ flow one round together without a server of ours in the middle.
 
 - Initial tagged release.
 
-[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/shreerammodi/ebb/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/shreerammodi/ebb/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/shreerammodi/ebb/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/shreerammodi/ebb/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/shreerammodi/ebb/compare/v1.3.2...v1.3.3
