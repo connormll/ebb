@@ -250,7 +250,10 @@ fn on_file_event(app: &AppHandle, path: &Path, last: &LastSeen) {
 /// for as long as the app runs. Only the kinds that can carry new bytes
 /// answer the question the watcher is asking.
 fn is_content_change(kind: &EventKind) -> bool {
-    matches!(kind, EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_))
+    matches!(
+        kind,
+        EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_)
+    )
 }
 
 /// Sets up the config file and its watcher. Silently no-ops if the config dir
@@ -333,19 +336,26 @@ mod tests {
         assert!(out.contains("# personal"));
     }
 
-    /// Every read the watcher performed feeds the watcher an open event of
-    /// its own, so a callback that reacted to every kind re-triggered itself:
-    /// a tight read loop that burned a core for as long as the app ran. Only
-    /// content-bearing kinds wake the callback now.
+    /// Every read the watcher performs feeds the watcher an open event of
+    /// its own, so a callback that reacted to every kind would re-trigger
+    /// itself in a tight read loop. Only content-bearing kinds wake it.
     #[test]
     fn only_content_events_wake_the_watcher() {
-        use notify::event::{AccessKind, AccessMode, CreateKind, DataChange, ModifyKind, RemoveKind};
+        use notify::event::{
+            AccessKind, AccessMode, CreateKind, DataChange, ModifyKind, RemoveKind,
+        };
 
-        assert!(!is_content_change(&EventKind::Access(AccessKind::Open(AccessMode::Any))));
-        assert!(!is_content_change(&EventKind::Access(AccessKind::Close(AccessMode::Write))));
+        assert!(!is_content_change(&EventKind::Access(AccessKind::Open(
+            AccessMode::Any
+        ))));
+        assert!(!is_content_change(&EventKind::Access(AccessKind::Close(
+            AccessMode::Write
+        ))));
         assert!(!is_content_change(&EventKind::Any));
         assert!(is_content_change(&EventKind::Create(CreateKind::File)));
-        assert!(is_content_change(&EventKind::Modify(ModifyKind::Data(DataChange::Any))));
+        assert!(is_content_change(&EventKind::Modify(ModifyKind::Data(
+            DataChange::Any
+        ))));
         assert!(is_content_change(&EventKind::Remove(RemoveKind::File)));
     }
 
