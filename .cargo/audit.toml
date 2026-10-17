@@ -1,0 +1,13 @@
+# Read by `cargo audit` run from the repo root, which is how CI runs it.
+
+[advisories]
+# zip 4.6.1 reaches the tree only through tauri-plugin-updater, on Windows,
+# where it unpacks an update bundle. The plugin checks the bundle's minisign
+# signature against the pubkey in tauri.conf.json before it hands the bytes
+# to zip, so an archive that reaches extraction is one we signed. Remove
+# these once tauri-plugin-updater requires zip >= 9 (2.14.0 still pins ^4).
+ignore = [
+    "RUSTSEC-2026-0367",
+    "RUSTSEC-2026-0368",
+    "RUSTSEC-2026-0369",
+]
